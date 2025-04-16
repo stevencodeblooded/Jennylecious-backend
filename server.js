@@ -2,6 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const morgan = require("morgan");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const fileUpload = require("express-fileupload");
 const path = require("path");
 const connectDB = require("./src/config/db");
@@ -33,8 +34,15 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
+// Cookie parser
+app.use(cookieParser());
+
 // Enable CORS
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],  // Include both localhost variations
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // File uploading
 app.use(

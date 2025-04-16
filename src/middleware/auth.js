@@ -7,18 +7,25 @@ const User = require("../models/User");
 exports.protect = asyncHandler(async (req, res, next) => {
   let token;
 
+  console.log("Headers:", req.headers); // Log all headers
+  console.log("Authorization header:", req.headers.authorization); // Log just the auth header
+  console.log("Cookies:", req.cookies); // Log cookies
+
+  // Check if auth header exists and has the right format
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
-    // Set token from Bearer token in header
+    // Extract token from Bearer token
     token = req.headers.authorization.split(" ")[1];
-  } else if (req.cookies?.token) {
-    // Set token from cookie
+  } else if (req.cookies && req.cookies.token) {
+    // Or get token from cookies
     token = req.cookies.token;
   }
 
-  // Make sure token exists
+  console.log("Final token value:", token);
+
+  // Check if token exists
   if (!token) {
     return next(new ErrorResponse("Not authorized to access this route", 401));
   }
@@ -27,11 +34,41 @@ exports.protect = asyncHandler(async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.user = await User.findById(decoded.id);
+    // Find user and explicitly check active status
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return next(
+        new ErrorResponse("User not found with the provided token", 401)
+      );
+    }
+
+    // Check if user account is active
+    if (user.isActive === false) {
+      return next(
+        new ErrorResponse("Account is inactive. Please contact support.", 403)
+      );
+    }
+
+    // Attach user to request object
+    req.user = user;
 
     next();
   } catch (err) {
-    return next(new ErrorResponse("Not authorized to access this route", 401));
+    console.error("JWT verification error:", err.message);
+
+    // More specific error message based on the error type
+    if (err.name === "TokenExpiredError") {
+      return next(
+        new ErrorResponse("Token has expired, please login again", 401)
+      );
+    } else if (err.name === "JsonWebTokenError") {
+      return next(new ErrorResponse("Invalid token, please login again", 401));
+    } else {
+      return next(
+        new ErrorResponse("Not authorized to access this route", 401)
+      );
+    }
   }
 });
 

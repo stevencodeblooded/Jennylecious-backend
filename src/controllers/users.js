@@ -216,3 +216,42 @@ exports.updateUserNotes = asyncHandler(async (req, res, next) => {
     data: user,
   });
 });
+
+
+exports.deactivateUser = asyncHandler(async (req, res, next) => {
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { isActive: false },
+    { new: true }
+  );
+
+  if (!user) {
+    return next(
+      new ErrorResponse(`No user found with id of ${req.params.id}`, 404)
+    );
+  }
+
+  res.status(200).json({
+    success: true,
+    data: user,
+  });
+});
+
+exports.activateUser = asyncHandler(async (req, res, next) => {
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { isActive: true },
+    { new: true }
+  );
+
+  if (!user) {
+    return next(
+      new ErrorResponse(`No user found with id of ${req.params.id}`, 404)
+    );
+  }
+
+  res.status(200).json({
+    success: true,
+    data: user,
+  });
+});

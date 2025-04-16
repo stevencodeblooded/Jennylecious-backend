@@ -53,6 +53,10 @@ const UserSchema = new mongoose.Schema(
         ref: "Order",
       },
     ],
+    isActive: {
+      type: Boolean,
+      default: true, // By default, new users will be active
+    },
     wishlist: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -82,9 +86,11 @@ UserSchema.pre("save", async function (next) {
 
 // Sign JWT and return
 UserSchema.methods.getSignedJwtToken = function () {
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE,
-  });
+  return jwt.sign(
+    { id: this._id },
+    process.env.JWT_SECRET,
+    { expiresIn: `${process.env.JWT_EXPIRE}d` } // Add 'd' for days
+  );
 };
 
 // Match user entered password to hashed password in database

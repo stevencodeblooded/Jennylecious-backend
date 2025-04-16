@@ -30,26 +30,42 @@ exports.register = asyncHandler(async (req, res, next) => {
 exports.login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
 
-  // Validate email & password
-  if (!email || !password) {
-    return next(new ErrorResponse("Please provide an email and password", 400));
-  }
-
-  // Check for user
+  // Find user by email and include password (since it's select: false)
   const user = await User.findOne({ email }).select("+password");
 
   if (!user) {
     return next(new ErrorResponse("Invalid credentials", 401));
   }
 
-  // Check if password matches
+  // Check if the account is active BEFORE checking password
+  if (user.isActive === false) {
+    return next(
+      new ErrorResponse("Account is inactive. Please contact support.", 403)
+    );
+  }
+
+  // Check password
   const isMatch = await user.matchPassword(password);
 
   if (!isMatch) {
     return next(new ErrorResponse("Invalid credentials", 401));
   }
 
-  sendTokenResponse(user, 200, res);
+  // Generate token
+  const token = user.getSignedJwtToken();
+
+  // Send response
+  res.status(200).json({
+    success: true,
+    token,
+    user: {
+      id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      isActive: user.isActive,
+    },
+  });
 });
 
 // @desc    Log user out / clear cookie
@@ -143,19 +159,23 @@ const sendTokenResponse = (user, statusCode, res) => {
   // Create token
   const token = user.getSignedJwtToken();
 
+  // Set cookie options
   const options = {
     expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
+      Date.now() + (parseInt(process.env.JWT_COOKIE_EXPIRE) || 30) * 24 * 60 * 60 * 1000
     ),
-    httpOnly: true,
+    httpOnly: true
   };
 
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === 'production') {
     options.secure = true;
   }
 
-  res.status(statusCode).cookie("token", token, options).json({
-    success: true,
-    token,
-  });
+  res
+    .status(statusCode)
+    .cookie('token', token, options)
+    .json({
+      success: true,
+      token
+    });
 };
