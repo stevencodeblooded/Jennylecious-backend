@@ -2,12 +2,12 @@ const mongoose = require("mongoose");
 
 const CategorySchema = new mongoose.Schema(
   {
-    id: {
-      type: String,
-      required: [true, "Please add a category ID"],
-      unique: true,
-      trim: true,
-    },
+    // id: {
+    //   type: String,
+    //   // required: [true, "Please add a category ID"],
+    //   unique: true,
+    //   trim: true,
+    // },
     name: {
       type: String,
       required: [true, "Please add a category name"],
@@ -16,6 +16,10 @@ const CategorySchema = new mongoose.Schema(
     description: {
       type: String,
       trim: true,
+    },
+    image: {
+      type: String,
+      required: [true, "Please add an image URL"],
     },
   },
   {
