@@ -43,8 +43,7 @@ app.use(
     origin: [
       "http://localhost:3000",
       "http://127.0.0.1:3000",
-      "https://cakesbakery.vercel.app",
-      "https://jennyleciouscakes.vercel.app/",
+      "https://jennyleciouscakes.vercel.app",
     ],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
