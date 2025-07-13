@@ -14,11 +14,10 @@ const connectDB = async () => {
     console.log("MongoDB URI exists:", !!process.env.MONGO_URI);
 
     const conn = await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      // Important for serverless - prevent connection pooling issues
-      bufferCommands: false,
-      bufferMaxEntries: 0,
+      // Removed deprecated options: useNewUrlParser, useUnifiedTopology, bufferCommands, bufferMaxEntries
+      // These are now handled automatically by Mongoose 6+
+
+      // Keep only the modern options that are still supported
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
